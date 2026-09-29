@@ -16,9 +16,14 @@ jobs:
           java-version: 17
       - run: npm install
       - run: npx cap add android
-      - name: Permissoes de alarme e notificacao
+      - name: Permissoes
         run: |
-          sed -i 's|<application|<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <application|' android/app/src/main/AndroidManifest.xml
+          sed -i 's|<application|<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>\n    <application|' android/app/src/main/AndroidManifest.xml
+      - name: Plugin nativo e som do alarme
+        run: |
+          mkdir -p android/app/src/main/java/com/rotina/almoco android/app/src/main/res/raw
+          cp native/*.java android/app/src/main/java/com/rotina/almoco/
+          python3 native/gerar_som.py android/app/src/main/res/raw/alarme.wav
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
