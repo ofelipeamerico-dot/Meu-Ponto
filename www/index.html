@@ -3,20 +3,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rotina do Almoço</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mut:#6b7480;--ac:#2563eb;--bd:#e3e6ea}
-@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2027;--tx:#eef1f4;--mut:#98a2ae;--ac:#5b8def;--bd:#2b323b}}
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f24;--mut:#6b7480;--ac:#2563eb;--bd:#e3e6ea;--ok:#16a34a}
+@media (prefers-color-scheme:dark){:root{--bg:#111418;--card:#1b2027;--tx:#eef1f4;--mut:#98a2ae;--ac:#5b8def;--bd:#2b323b;--ok:#22c55e}}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,Roboto,sans-serif}
-main{max-width:460px;margin:0 auto;padding:28px 16px 40px}
+main{max-width:460px;margin:0 auto;padding:28px 16px 90px}
 h1{font-size:22px;margin:0 0 4px}p.s{color:var(--mut);margin:0 0 18px;font-size:14px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
 label{display:block;font-size:13px;color:var(--mut);margin:0 0 6px}
 input{width:100%;box-sizing:border-box;font-size:20px;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{font-size:16px;padding:12px;border-radius:10px;border:0;background:var(--ac);color:#fff;width:100%;margin-top:10px}
+button{font-size:16px;padding:14px;border-radius:10px;border:0;background:var(--ac);color:#fff;width:100%;margin-top:10px;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+button:active{transform:scale(.97)}button:disabled{opacity:.75}
 button.o{background:transparent;color:var(--ac);border:1px solid var(--ac)}
-.step{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--bd)}
-.step:last-of-type{border-bottom:0}.step b{font-size:28px}.step span{font-size:14px;color:var(--mut)}
-#msg{font-size:14px;color:var(--mut);margin-top:10px;min-height:18px}
+button.ok{background:var(--ok)}
+.step{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd)}
+.step b{font-size:26px}.step span{font-size:14px;color:var(--mut)}
+.chip{display:block;font-size:12px;margin-top:2px;min-height:14px}
+.chip.ok{color:var(--ok);font-weight:600}.chip.no{color:var(--mut)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.seg button{margin:0;padding:10px;font-size:14px;background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.hint{font-size:12px;color:var(--mut);margin:6px 0 0}
+.sp{width:16px;height:16px;border:2px solid #fff5;border-top-color:#fff;border-radius:50%;animation:r .7s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+#toast{position:fixed;left:16px;right:16px;bottom:24px;max-width:428px;margin:0 auto;background:#1b1f24;color:#fff;padding:14px 16px;border-radius:12px;font-size:14px;opacity:0;transform:translateY(20px);transition:.25s;pointer-events:none}
+#toast.show{opacity:1;transform:none}
 details summary{color:var(--mut);font-size:14px}
 </style></head><body><main>
 <h1>Rotina do Almoço</h1>
@@ -27,13 +38,16 @@ details summary{color:var(--mut);font-size:14px}
 <button id="agora" class="o">Usar hora atual</button>
 </div>
 <div class="card" id="res" hidden>
-<div class="step"><span>Começar a me arrumar</span><b id="r1"></b></div>
-<div class="step"><span>Sair de casa</span><b id="r2"></b></div>
-<div class="step"><span>Chegar no trabalho</span><b id="r3"></b></div>
-<div class="step"><span>Bater o ponto</span><b id="r4"></b></div>
-<button id="alarm">⏰ Agendar alarmes</button>
-<button id="cancel" class="o">Cancelar alarmes</button>
-<div id="msg"></div>
+<div class="step"><span>Começar a me arrumar<i class="chip" id="c0"></i></span><b id="r0"></b></div>
+<div class="step"><span>Sair de casa<i class="chip" id="c1"></i></span><b id="r1"></b></div>
+<div class="step"><span>Chegar no trabalho<i class="chip" id="c2"></i></span><b id="r2"></b></div>
+<div class="step" style="border:0"><span>Bater o ponto<i class="chip" id="c3"></i></span><b id="r3"></b></div>
+<label style="margin-top:12px">Como avisar</label>
+<div class="seg"><button id="m1" class="on">⏰ Relógio do celular</button><button id="m2">🔔 Notificação</button></div>
+<p class="hint" id="mh"></p>
+<button id="alarm"><span id="al">⏰ Agendar alarmes</span></button>
+<button id="rel" class="o">Abrir alarmes do Relógio</button>
+<button id="test" class="o">Testar alarme</button>
 </div>
 <div class="card"><details><summary>Ajustar tempos (minutos)</summary>
 <div class="row" style="margin-top:12px">
@@ -42,43 +56,71 @@ details summary{color:var(--mut);font-size:14px}
 <div><label for="des">Deslocamento</label><input id="des" type="number" min="0" inputmode="numeric"></div>
 <div><label for="arr">Me arrumar</label><input id="arr" type="number" min="0" inputmode="numeric"></div>
 </div></details></div>
-</main>
+</main><div id="toast"></div>
 <script>
-var D={alm:60,ant:10,des:5,arr:7},T=[],$=function(i){return document.getElementById(i)};
-try{var s=JSON.parse(localStorage.getItem("rot")||"null");if(s)D=Object.assign(D,s)}catch(e){}
+var D={alm:60,ant:10,des:5,arr:7},T=[],mode="relogio",busy=false,done="",$=function(i){return document.getElementById(i)};
+var TITLES=["Hora de se arrumar","Hora de sair de casa","Chegue ao trabalho","Hora de bater o ponto"];
+try{var s=JSON.parse(localStorage.getItem("rot")||"null");if(s){D=Object.assign(D,s.D||{});mode=s.mode||mode}}catch(e){}
+function sv(){try{localStorage.setItem("rot",JSON.stringify({D:D,mode:mode}))}catch(e){}}
 function f(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+var tt;function toast(t){var e=$("toast");e.textContent=t;e.className="show";clearTimeout(tt);tt=setTimeout(function(){e.className=""},3500)}
+function CA(){return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.ClockAlarm}
+function LN(){return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications}
+function chips(st){for(var i=0;i<4;i++){var c=$("c"+i);c.className="chip "+(st?st[i]?"ok":"no":"");c.textContent=st?(st[i]?"✓ Agendado":"Já passou"):""}}
+function btn(state){var b=$("alarm");b.className=state==="ok"?"ok":"";b.disabled=state==="load";
+ $("al").innerHTML=state==="load"?'<span class="sp"></span> Agendando…':state==="ok"?"✓ Alarmes agendados":"⏰ Agendar alarmes"}
+function setMode(m){mode=m;sv();$("m1").className=m==="relogio"?"on":"";$("m2").className=m==="notif"?"on":"";
+ $("mh").textContent=m==="relogio"?"Cria alarmes de verdade no app Relógio, com o toque que você já usa.":"O app envia uma notificação com som de alarme na hora.";
+ $("rel").style.display=m==="relogio"?"flex":"none";done="";chips(null);btn("idle")}
 function calc(){
- ["alm","ant","des","arr"].forEach(function(k){var v=parseInt($(k).value,10);D[k]=isNaN(v)?0:v});
- try{localStorage.setItem("rot",JSON.stringify(D))}catch(e){}
+ ["alm","ant","des","arr"].forEach(function(k){var v=parseInt($(k).value,10);D[k]=isNaN(v)?0:v});sv();
  var v=$("saida").value;if(!v){$("res").hidden=true;return}
  var p=v.split(":"),s=+p[0]*60+ +p[1],ponto=s+D.alm,cheg=ponto-D.ant,sai=cheg-D.des,arr=sai-D.arr;
- T=[arr,sai,cheg,ponto];
- [$("r1"),$("r2"),$("r3"),$("r4")].forEach(function(e,i){e.textContent=f(T[i])});
- $("res").hidden=false;$("msg").textContent="";
+ T=[arr,sai,cheg,ponto];T.forEach(function(m,i){$("r"+i).textContent=f(m)});
+ $("res").hidden=false;done="";chips(null);btn("idle");
 }
-var TITLES=["Hora de se arrumar","Hora de sair de casa","Chegue ao trabalho","Hora de bater o ponto"];
-function LN(){return window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications}
+function items(){var now=new Date();return T.map(function(m,i){m=((m%1440)+1440)%1440;var d=new Date();d.setHours(Math.floor(m/60),m%60,0,0);return{i:i,m:m,d:d,ok:d>now}})}
+async function notif(list){
+ var ln=LN();if(!ln)throw new Error("disponível só no app instalado");
+ var pr=await ln.requestPermissions();if(pr.display!=="granted")throw new Error("permita as notificações");
+ var ex=await ln.checkExactNotificationSetting();
+ if(ex.exact_alarm!=="granted"){await ln.changeExactNotificationSetting();throw new Error("ative 'Alarmes e lembretes' e tente de novo")}
+ await ln.createChannel({id:"alarmes",name:"Alarmes da rotina",importance:5,visibility:1,vibration:true,sound:"alarme.wav"});
+ await ln.cancel({notifications:[1,2,3,4,9].map(function(i){return{id:i}})});
+ await ln.schedule({notifications:list.map(function(x){return{id:x.id,title:x.title,body:x.body,channelId:"alarmes",schedule:{at:x.at,allowWhileIdle:true}}})});
+}
 async function agendar(){
- var ln=LN();if(!ln){$("msg").textContent="Alarmes só funcionam no app instalado.";return}
+ if(busy)return;var it=items();
+ if(!it.some(function(x){return x.ok})){toast("Todos os horários de hoje já passaram.");return}
+ var key=mode+T.join(",")+new Date().toDateString();
+ if(done===key){toast("Esses alarmes já estão agendados.");return}
+ busy=true;btn("load");
  try{
-  var pr=await ln.requestPermissions();
-  if(pr.display!=="granted"){$("msg").textContent="Permita as notificações para o app.";return}
-  var ex=await ln.checkExactNotificationSetting();
-  if(ex.exact_alarm!=="granted"){await ln.changeExactNotificationSetting();$("msg").textContent="Ative 'Alarmes e lembretes' e toque em agendar de novo.";return}
-  await ln.cancel({notifications:[1,2,3,4].map(function(i){return{id:i}})});
-  var now=new Date(),list=[];
-  T.forEach(function(m,i){
-   m=((m%1440)+1440)%1440;var d=new Date();d.setHours(Math.floor(m/60),m%60,0,0);
-   if(d>now)list.push({id:i+1,title:TITLES[i],body:"São "+f(m),schedule:{at:d,allowWhileIdle:true}});
-  });
-  if(!list.length){$("msg").textContent="Todos os horários de hoje já passaram.";return}
-  await ln.schedule({notifications:list});
-  $("msg").textContent=list.length+" alarme(s) agendado(s) para hoje.";
- }catch(e){$("msg").textContent="Erro: "+e.message}
+  if(mode==="relogio"){
+   var ca=CA();if(!ca)throw new Error("disponível só no app instalado");
+   for(var k=0;k<it.length;k++){if(it[k].ok){await ca.setAlarm({hour:Math.floor(it[k].m/60),minute:it[k].m%60,message:"Rotina: "+TITLES[k]});await sleep(500)}}
+  }else{
+   await notif(it.filter(function(x){return x.ok}).map(function(x){return{id:x.i+1,title:TITLES[x.i],body:"São "+f(x.m),at:x.d}}));
+  }
+  chips(it.map(function(x){return x.ok}));btn("ok");done=key;
+  if(navigator.vibrate)navigator.vibrate(60);
+  toast("✓ "+it.filter(function(x){return x.ok}).length+" alarme(s) agendado(s) para hoje.");
+ }catch(e){btn("idle");chips(null);toast("Não deu certo: "+e.message)}
+ busy=false;
 }
-async function cancelar(){var ln=LN();if(!ln)return;try{await ln.cancel({notifications:[1,2,3,4].map(function(i){return{id:i}})});$("msg").textContent="Alarmes cancelados."}catch(e){}}
+async function testar(){
+ try{
+  if(mode==="relogio"){var ca=CA();if(!ca)throw new Error("disponível só no app instalado");
+   var d=new Date(Date.now()+120000);await ca.setAlarm({hour:d.getHours(),minute:d.getMinutes(),message:"Rotina: teste"});toast("Alarme de teste criado para "+f(d.getHours()*60+d.getMinutes())+".")}
+  else{await notif([{id:9,title:"Teste de alarme",body:"Se você ouviu, está tudo certo!",at:new Date(Date.now()+5000)}]);toast("Teste em 5 segundos. Se quiser, bloqueie a tela.")}
+ }catch(e){toast("Não deu certo: "+e.message)}
+}
 ["alm","ant","des","arr"].forEach(function(k){$(k).value=D[k];$(k).addEventListener("input",calc)});
 $("saida").addEventListener("input",calc);
 $("agora").onclick=function(){var d=new Date();$("saida").value=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");calc()};
-$("alarm").onclick=agendar;$("cancel").onclick=cancelar;
+$("alarm").onclick=agendar;$("test").onclick=testar;
+$("rel").onclick=function(){var c=CA();if(c)c.openAlarms().catch(function(){})};
+$("m1").onclick=function(){setMode("relogio")};$("m2").onclick=function(){setMode("notif")};
+setMode(mode);
 </script></body></html>
