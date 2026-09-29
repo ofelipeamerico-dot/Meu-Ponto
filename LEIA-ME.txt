@@ -1,0 +1,13 @@
+COMO GERAR O APK (sem instalar nada no computador)
+
+1. Crie uma conta gratuita em github.com e um repositório novo (botão "New").
+2. Envie TODOS os arquivos desta pasta para o repositório (Add file > Upload files),
+   incluindo a pasta "www" e a pasta oculta ".github/workflows/build.yml".
+   Se a pasta .github não subir, use Add file > Create new file, digite
+   .github/workflows/build.yml e cole o conteúdo do arquivo build.yml.
+3. Abra a aba "Actions". O build roda sozinho (uns 5 a 8 minutos).
+4. Quando terminar (check verde), clique na execução e baixe "rotina-almoco-apk" em Artifacts.
+5. Descompacte o zip, envie o app-debug.apk para o celular e instale
+   (o Android vai pedir para permitir instalação de fontes desconhecidas).
+6. No primeiro uso, permita notificações e "Alarmes e lembretes".
+   Em Configurações > Bateria, deixe o app sem restrição para os alarmes não falharem.
